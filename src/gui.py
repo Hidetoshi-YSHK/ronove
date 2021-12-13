@@ -88,10 +88,16 @@ class _OpenFileButton(tk.Button):
             image=self.photo_image,
             compound=tk.TOP,
             width=Gui.BUTTON_WIDTH,
-            height=Gui.BUTTON_HEIGHT)
+            height=Gui.BUTTON_HEIGHT,
+            command=self.onclick)
 
     def deploy(self) -> None:
         super().pack(side=tk.LEFT)
+
+    def onclick(self) -> None:
+        print("clicked")
+        print(self.image)
+        pass
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
