@@ -1,4 +1,4 @@
-from typing import Any 
+from typing import Any, Literal 
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinterdnd2 as tkdnd
@@ -8,8 +8,8 @@ from resources import Resources
 
 
 class Gui:
-    WINDOW_MIN_WIDTH = 640
-    WINDOW_MIN_HEIGHT = 480
+    WINDOW_MIN_WIDTH = 1280
+    WINDOW_MIN_HEIGHT = 720
     BUTTON_WIDTH = 48
     BUTTON_HEIGHT = 48
     _GRID_UNIFORM_TOP = "grid_group_top"
@@ -24,9 +24,9 @@ class Gui:
         _LeftFrame(self.root).deploy()
         _RightFrame(self.root).deploy()
         self.root.grid_columnconfigure(
-            0, weight=1, uniform=self._GRID_UNIFORM_TOP)
+            0, weight=9, uniform=self._GRID_UNIFORM_TOP)
         self.root.grid_columnconfigure(
-            1, weight=1, uniform=self._GRID_UNIFORM_TOP)
+            1, weight=7, uniform=self._GRID_UNIFORM_TOP)
         self.root.grid_rowconfigure(0, weight=1)
 
     def mainloop(self) -> None:
@@ -60,8 +60,10 @@ class _ButtonFrame(tk.Frame):
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
 
 class _TableFrame(tk.Frame):
+    _BG_COLOR = "#808080"
+
     def __init__(self, master: Any) -> None:
-        super().__init__(master, bg="#0000ff")
+        super().__init__(master, bg=self._BG_COLOR)
         self.table = _Table(self)
         self.scrollbar_h = ttk.Scrollbar(
             self, orient = tk.HORIZONTAL, command=self.table.xview)
@@ -92,16 +94,63 @@ class _OpenFileButton(tk.Button):
         super().pack(side=tk.LEFT)
 
 class _Table(ttk.Treeview):
+    _COLUMN_ID = "id"
+    _COLUMN_ENGLISH_WORD = "english_word"
+    _COLUMN_STATUS = "status"
+    _COLUMN_PRONUNCIATION = "pronunciation"
+    _COLUMN_SOUND = "sound"
+    _COLUMN_IMAGE = "image"
+
     _COLUMNS = [
-        "id",
-        "english_word",
-        "status",
-        "pronunciation",
-        "sound",
-        "image"
+        _COLUMN_ID,
+        _COLUMN_ENGLISH_WORD,
+        _COLUMN_STATUS,
+        _COLUMN_PRONUNCIATION,
+        _COLUMN_SOUND,
+        _COLUMN_IMAGE,
         ]
+
+    _COLUMN_WIDTH = {
+        _COLUMN_ID : 80,
+        _COLUMN_ENGLISH_WORD : 200,
+        _COLUMN_STATUS : 80,
+        _COLUMN_PRONUNCIATION : 200,
+        _COLUMN_SOUND : 50,
+        _COLUMN_IMAGE : 50,
+    }
+
+    _COLUMN_ANCHOR : dict[str, Literal["nw", "n", "ne", "w", "center", "e", "sw", "s", "se"]] = {
+        _COLUMN_ID : tk.CENTER,
+        _COLUMN_ENGLISH_WORD : tk.CENTER,
+        _COLUMN_STATUS : tk.CENTER,
+        _COLUMN_PRONUNCIATION : tk.CENTER,
+        _COLUMN_SOUND : tk.CENTER,
+        _COLUMN_IMAGE : tk.CENTER,
+    }
+
+    _COLUMN_HEADINGS = {
+        _COLUMN_ID : "ID",
+        _COLUMN_ENGLISH_WORD : "英単語",
+        _COLUMN_STATUS : "状態",
+        _COLUMN_PRONUNCIATION : "発音",
+        _COLUMN_SOUND : "音声",
+        _COLUMN_IMAGE : "画像",
+    }
+
+    _SHOW_OPTION = "headings"
+
     def __init__(self, master: Any) -> None:
-        super().__init__(master, columns=self._COLUMNS)
+        super().__init__(master, columns=self._COLUMNS, show=self._SHOW_OPTION)
+        for column in self._COLUMNS:
+            self.column(
+                column,
+                width=self._COLUMN_WIDTH[column],
+                anchor=self._COLUMN_ANCHOR[column])
+            self.heading(
+                column,
+                text=self._COLUMN_HEADINGS[column],
+                anchor=self._COLUMN_ANCHOR[column])
+
 
     def deploy(self) -> None:
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.Y, expand=True)
