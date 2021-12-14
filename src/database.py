@@ -1,9 +1,9 @@
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
+from orm_base import OrmBase
 from english_word import EnglishWord
 from sound import Sound
 from image import Image
-from orm_base import OrmBase
 
 class Database:
     def __init__(self, filepath) -> None:
