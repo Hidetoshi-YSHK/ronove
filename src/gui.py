@@ -5,6 +5,7 @@ import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
 import main
 from resources import Resources
+from ronove import Ronove
 
 
 class Gui:
@@ -95,8 +96,7 @@ class _OpenFileButton(tk.Button):
         super().pack(side=tk.LEFT)
 
     def onclick(self) -> None:
-        print("clicked")
-        print(self.image)
+        Ronove.get_instance()
         pass
 
 class _Table(ttk.Treeview):
