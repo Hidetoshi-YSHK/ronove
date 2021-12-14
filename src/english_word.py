@@ -1,12 +1,20 @@
-from sqlalchemy import Column, Integer, SmallInteger, String, LargeBinary
-from database import Database
+from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Integer, SmallInteger, String, LargeBinary
+from sqlalchemy.orm import relationship
+from orm_base import OrmBase
 
-class EnglishWord(Database.BaseClass):
+class EnglishWord(OrmBase):
     id = Column(Integer, primary_key=True, autoincrement=True)
     word = Column(String(length=256))
     status = Column(SmallInteger)
     pronunciation = Column(String(length=256))
-    sound_data = Column(LargeBinary)
-    image_data = Column(LargeBinary)
+    sound = relationship(
+        "Sound",
+        back_populates="english_word",
+        uselist=False)
+    image = relationship(
+        "Image",
+        back_populates="english_word",
+        uselist=False)
 
-    __tablename__ = 'english_words'
+    __tablename__ = "english_word"
