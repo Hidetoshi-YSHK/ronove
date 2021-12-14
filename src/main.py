@@ -1,21 +1,18 @@
-import os.path as path
-import sys
+from ronove import Ronove
+from gui import Gui
 from database import Database
-import gui
+from singleton import Singleton
 
-class Main:
-    DB_FILE_NAME = "data.db"
-
+class Main(Singleton):
     def __init__(self) -> None:
-        self.gui = gui.Gui(self)
-        self.database = Database(
-            path.join(self.get_exe_dir(), self.DB_FILE_NAME))
+        self.ronove = Ronove.get_instance()
+        self.gui = Gui.get_instance()
+        self.database = Database.get_instance()
+        self.database.initialize(self.ronove.get_db_file_path())
 
     def main(self) -> None:
         self.gui.mainloop()
 
-    def get_exe_dir(self) -> str:
-        return path.dirname(path.abspath(sys.argv[0]))
-
 if __name__ == '__main__':
-    Main().main()
+    pass
+    Main.get_instance().main()

@@ -1,8 +1,9 @@
-import threading
+from threading import Lock
 
 class Singleton:
-    _singleton_instance = None
-    _singleton_lock = threading.Lock()
+    _singleton_lock = Lock()
+    _subclass_lock = None
+    _subclass_instance = None
 
     def __new__(cls):
         raise NotImplementedError("Not allowed. Use get_instance().")
@@ -15,9 +16,16 @@ class Singleton:
 
     @classmethod
     def get_instance(cls):
-        if cls._singleton_instance is None:
-            with cls._singleton_lock: 
-                if cls._singleton_instance is None:
-                    cls._singleton_instance = cls.__private_new__()
+        # Create a lock for subclass
+        if cls._subclass_lock is None:
+            with Singleton._singleton_lock:
+                if cls._subclass_lock is None:
+                    cls._subclass_lock = Lock()
 
-        return cls._singleton_instance
+        # Create a subclass instance
+        if cls._subclass_instance is None:
+            with cls._subclass_lock: 
+                if cls._subclass_instance is None:
+                    cls._subclass_instance = cls.__private_new__()
+
+        return cls._subclass_instance

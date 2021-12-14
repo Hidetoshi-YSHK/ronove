@@ -3,20 +3,19 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
-import main
 from resources import Resources
 from ronove import Ronove
+from singleton import Singleton
 
 
-class Gui:
+class Gui(Singleton):
     WINDOW_MIN_WIDTH = 1280
     WINDOW_MIN_HEIGHT = 720
     BUTTON_WIDTH = 48
     BUTTON_HEIGHT = 48
     _GRID_UNIFORM_TOP = "grid_group_top"
 
-    def __init__(self, main:main.Main) -> None:
-        self.main = main
+    def __init__(self) -> None:
         self.root = tkdnd.Tk()
         self.root.geometry(f"{self.WINDOW_MIN_WIDTH}x{self.WINDOW_MIN_HEIGHT}")
         self.root.minsize(
