@@ -14,5 +14,4 @@ class Main(Singleton):
         self.gui.mainloop()
 
 if __name__ == '__main__':
-    pass
     Main.get_instance().main()
