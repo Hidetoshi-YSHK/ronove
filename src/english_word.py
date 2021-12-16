@@ -14,14 +14,14 @@ class EnglishWord(OrmBase):
     status = Column(SmallInteger)
     japanese_word = Column(String(length=256))
     pronunciation = Column(String(length=256))
+    sound_id = Column(Integer, ForeignKey("sound.id"))
+    image_id = Column(Integer, ForeignKey("image.id"))
     sound = relationship(
         "Sound",
-        back_populates="english_word",
-        uselist=False)
+        back_populates="english_word")
     image = relationship(
         "Image",
-        back_populates="english_word",
-        uselist=False)
+        back_populates="english_word")
 
     __tablename__ = "english_word"
 

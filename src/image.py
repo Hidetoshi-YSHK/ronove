@@ -10,10 +10,10 @@ class Image(OrmBase):
     id = Column(Integer, primary_key=True, autoincrement=True)
     data = Column(LargeBinary)
     extension = Column(String)
-    english_word_id = Column(Integer, ForeignKey("english_word.id"))
     english_word = relationship(
         "EnglishWord",
+        cascade="all, delete-orphan",
         back_populates="image",
-        cascade="all, delete-orphan")
+        uselist=False)
 
     __tablename__ = "image"

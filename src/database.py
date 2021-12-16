@@ -35,5 +35,5 @@ class Database(Singleton):
                 .first())
             if record != None and skip_existing_word:
                 continue
-            session.add(english_words)
+            session.add(english_word)
         session.commit()
