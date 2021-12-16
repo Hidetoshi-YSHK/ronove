@@ -22,3 +22,10 @@ class Database(Singleton):
         self.Session = sessionmaker(self.engine) 
         OrmBase.metadata.create_all(bind=self.engine)
 
+    def add_english_words(self, english_words:list[EnglishWord]) -> None:
+        session = self.Session()
+
+        for english_word in english_words:
+            record = (session.query(EnglishWord)
+                .filter(EnglishWord.word == english_word.word)
+                .first())

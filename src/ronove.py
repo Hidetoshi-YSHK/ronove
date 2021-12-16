@@ -19,7 +19,8 @@ class Ronove(Singleton):
 
     def load_english_word_file(
         self,
-        filepath:Union[str, bytes, os.PathLike]) -> None:
+        filepath:Union[str, bytes, os.PathLike],
+        skip_existing_word:bool) -> None:
 
         english_words = []
         with open(filepath) as f:
@@ -28,7 +29,10 @@ class Ronove(Singleton):
                 if word:
                     english_words.append(EnglishWord(word))
 
-        self.add_english_words(english_words)
+        self.add_english_words(english_words, skip_existing_word)
 
-    def add_english_words(self, english_words:list[EnglishWord]) -> None:
+    def add_english_words(
+        self,
+        english_words:list[EnglishWord],
+        skip_existing_word:bool) -> None:
         pass

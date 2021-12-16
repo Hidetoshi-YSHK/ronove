@@ -12,6 +12,7 @@ class EnglishWord(OrmBase):
     id = Column(Integer, primary_key=True, autoincrement=True)
     word = Column(String(length=256))
     status = Column(SmallInteger)
+    japanese_word = Column(String(length=256))
     pronunciation = Column(String(length=256))
     sound = relationship(
         "Sound",

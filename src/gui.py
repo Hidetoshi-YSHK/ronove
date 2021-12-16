@@ -2,6 +2,7 @@ from typing import Any, Literal
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog as filedialog
+import tkinter.messagebox as messagebox
 import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
 from resources import Resources
@@ -25,9 +26,9 @@ class Gui(Singleton):
         _LeftFrame(self.root).deploy()
         _RightFrame(self.root).deploy()
         self.root.grid_columnconfigure(
-            0, weight=9, uniform=self._GRID_UNIFORM_TOP)
+            0, weight=12, uniform=self._GRID_UNIFORM_TOP)
         self.root.grid_columnconfigure(
-            1, weight=7, uniform=self._GRID_UNIFORM_TOP)
+            1, weight=4, uniform=self._GRID_UNIFORM_TOP)
         self.root.grid_rowconfigure(0, weight=1)
 
     def mainloop(self) -> None:
@@ -99,13 +100,19 @@ class _OpenFileButton(tk.Button):
         filetypes = [("英単語ファイル", "*")]
         filepath = filedialog.askopenfilename(filetypes=filetypes)
         if filepath:
+            answer = messagebox.askquestion(
+                "読み込み設定",
+                "既存の単語をスキップしますか？",
+                icon=messagebox.INFO)
+            skip_existing_word = (answer == messagebox.YES)
             ronove = Ronove.get_instance()
-            ronove.load_english_word_file(filepath)
+            ronove.load_english_word_file(filepath, skip_existing_word)
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
     _COLUMN_ENGLISH_WORD = "english_word"
     _COLUMN_STATUS = "status"
+    _COLUMN_JAPANESE_WORD = "japanese_word"
     _COLUMN_PRONUNCIATION = "pronunciation"
     _COLUMN_SOUND = "sound"
     _COLUMN_IMAGE = "image"
@@ -114,15 +121,17 @@ class _Table(ttk.Treeview):
         _COLUMN_ID,
         _COLUMN_ENGLISH_WORD,
         _COLUMN_STATUS,
+        _COLUMN_JAPANESE_WORD,
         _COLUMN_PRONUNCIATION,
         _COLUMN_SOUND,
         _COLUMN_IMAGE,
         ]
 
     _COLUMN_WIDTH = {
-        _COLUMN_ID : 80,
+        _COLUMN_ID : 50,
         _COLUMN_ENGLISH_WORD : 200,
         _COLUMN_STATUS : 80,
+        _COLUMN_JAPANESE_WORD : 300,
         _COLUMN_PRONUNCIATION : 200,
         _COLUMN_SOUND : 50,
         _COLUMN_IMAGE : 50,
@@ -130,9 +139,10 @@ class _Table(ttk.Treeview):
 
     _COLUMN_ANCHOR : dict[str, Literal["nw", "n", "ne", "w", "center", "e", "sw", "s", "se"]] = {
         _COLUMN_ID : tk.CENTER,
-        _COLUMN_ENGLISH_WORD : tk.CENTER,
+        _COLUMN_ENGLISH_WORD : tk.W,
         _COLUMN_STATUS : tk.CENTER,
-        _COLUMN_PRONUNCIATION : tk.CENTER,
+        _COLUMN_JAPANESE_WORD : tk.W,
+        _COLUMN_PRONUNCIATION : tk.W,
         _COLUMN_SOUND : tk.CENTER,
         _COLUMN_IMAGE : tk.CENTER,
     }
@@ -141,6 +151,7 @@ class _Table(ttk.Treeview):
         _COLUMN_ID : "ID",
         _COLUMN_ENGLISH_WORD : "英単語",
         _COLUMN_STATUS : "状態",
+        _COLUMN_JAPANESE_WORD : "日本語",
         _COLUMN_PRONUNCIATION : "発音",
         _COLUMN_SOUND : "音声",
         _COLUMN_IMAGE : "画像",
