@@ -1,6 +1,7 @@
 from typing import Any, Literal 
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.filedialog as filedialog
 import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
 from resources import Resources
@@ -95,8 +96,11 @@ class _OpenFileButton(tk.Button):
         super().pack(side=tk.LEFT)
 
     def onclick(self) -> None:
-        Ronove.get_instance()
-        pass
+        filetypes = [("英単語ファイル", "*")]
+        filepath = filedialog.askopenfilename(filetypes=filetypes)
+        if filepath:
+            ronove = Ronove.get_instance()
+            ronove.load_english_word_file(filepath)
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"

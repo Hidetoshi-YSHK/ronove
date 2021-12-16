@@ -16,6 +16,9 @@ class Database(Singleton):
     def initialize(
         self,
         filepath:Union[str, bytes, os.PathLike]) -> None:
+
         self.engine = sqlalchemy.create_engine(
             self.get_connection_string(filepath))
+        self.Session = sessionmaker(self.engine) 
         OrmBase.metadata.create_all(bind=self.engine)
+
