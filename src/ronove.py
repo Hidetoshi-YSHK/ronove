@@ -2,6 +2,7 @@ import sys
 import os
 import os.path as path
 from typing import Union
+from database import Database
 from english_word import EnglishWord
 from singleton import Singleton
 
@@ -29,10 +30,5 @@ class Ronove(Singleton):
                 if word:
                     english_words.append(EnglishWord(word))
 
-        self.add_english_words(english_words, skip_existing_word)
-
-    def add_english_words(
-        self,
-        english_words:list[EnglishWord],
-        skip_existing_word:bool) -> None:
-        pass
+        database = Database.get_instance()
+        database.add_english_words(english_words, skip_existing_word)
