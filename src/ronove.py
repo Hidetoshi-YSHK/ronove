@@ -5,6 +5,7 @@ from typing import Union
 from database import Database
 from english_word import EnglishWord
 from singleton import Singleton
+import gui
 
 class Ronove(Singleton):
     DB_FILE_NAME = "data.db"
@@ -37,5 +38,4 @@ class Ronove(Singleton):
     def on_english_words_change(self) -> None:
         database = Database.get_instance()
         english_words = database.select_all_english_words()
-        for english_word in english_words:
-            print(vars(english_word))
+        gui.Gui.get_instance().refresh_table(english_words)

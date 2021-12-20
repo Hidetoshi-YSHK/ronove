@@ -1,7 +1,18 @@
+"""
 from ronove import Ronove
 from gui import Gui
 from database import Database
 from singleton import Singleton
+"""
+import ronove
+Ronove = ronove.Ronove
+import gui
+Gui = gui.Gui
+import database
+Database = database.Database
+import singleton
+Singleton = singleton.Singleton
+
 
 class Main(Singleton):
     def __init__(self) -> None:

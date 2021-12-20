@@ -5,8 +5,9 @@ import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
 import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
+from english_word import EnglishWord
 from resources import Resources
-from ronove import Ronove
+import ronove
 from singleton import Singleton
 
 
@@ -33,6 +34,9 @@ class Gui(Singleton):
 
     def mainloop(self) -> None:
         self.root.mainloop()
+
+    def refresh_table(self, english_words:list[EnglishWord]) -> None:
+        pass
 
 class _LeftFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -105,8 +109,8 @@ class _OpenFileButton(tk.Button):
                 "既存の単語をスキップしますか？",
                 icon=messagebox.INFO)
             skip_existing_word = (answer == messagebox.YES)
-            ronove = Ronove.get_instance()
-            ronove.load_english_word_file(filepath, skip_existing_word)
+            rnv = ronove.Ronove.get_instance()
+            rnv.load_english_word_file(filepath, skip_existing_word)
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
