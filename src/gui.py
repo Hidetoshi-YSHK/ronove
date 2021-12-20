@@ -5,13 +5,13 @@ import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
 import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
-from english_word import EnglishWord
-from resources import Resources
-import ronove
-from singleton import Singleton
 
+import ronove;
+import resources;
+import english_word;
+import singleton;
 
-class Gui(Singleton):
+class Gui(singleton.Singleton):
     WINDOW_MIN_WIDTH = 1280
     WINDOW_MIN_HEIGHT = 720
     BUTTON_WIDTH = 48
@@ -35,7 +35,9 @@ class Gui(Singleton):
     def mainloop(self) -> None:
         self.root.mainloop()
 
-    def refresh_table(self, english_words:list[EnglishWord]) -> None:
+    def refresh_table(
+        self,
+        english_words:list[english_word.EnglishWord]) -> None:
         pass
 
 class _LeftFrame(tk.Frame):
@@ -86,6 +88,7 @@ class _TableFrame(tk.Frame):
 
 class _OpenFileButton(tk.Button):
     def __init__(self, master: Any) -> None:
+        Resources = resources.Resources
         self.image = Image.open(Resources.OPEN_FILE_BUTTON.get_path())
         self.photo_image = ImageTk.PhotoImage(self.image)
         super().__init__(

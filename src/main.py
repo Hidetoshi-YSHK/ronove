@@ -1,21 +1,13 @@
-"""
-from ronove import Ronove
-from gui import Gui
-from database import Database
-from singleton import Singleton
-"""
-import ronove
-Ronove = ronove.Ronove
-import gui
-Gui = gui.Gui
-import database
-Database = database.Database
-import singleton
-Singleton = singleton.Singleton
+import ronove;
+import gui;
+import database;
+import singleton;
 
-
-class Main(Singleton):
+class Main(singleton.Singleton):
     def __init__(self) -> None:
+        Ronove = ronove.Ronove
+        Gui = gui.Gui
+        Database = database.Database
         self.ronove = Ronove.get_instance()
         self.gui = Gui.get_instance()
         self.database = Database.get_instance()

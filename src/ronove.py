@@ -2,12 +2,13 @@ import sys
 import os
 import os.path as path
 from typing import Union
-from database import Database
-from english_word import EnglishWord
-from singleton import Singleton
-import gui
 
-class Ronove(Singleton):
+import gui;
+import database;
+import english_word;
+import singleton;
+
+class Ronove(singleton.Singleton):
     DB_FILE_NAME = "data.db"
 
     def __init__(self) -> None:
@@ -29,13 +30,13 @@ class Ronove(Singleton):
             for word in f:
                 word = word.strip()
                 if word:
-                    english_words.append(EnglishWord(word))
+                    english_words.append(english_word.EnglishWord(word))
 
-        database = Database.get_instance()
-        database.add_english_words(english_words, skip_existing_word)
+        db = database.Database.get_instance()
+        db.add_english_words(english_words, skip_existing_word)
         self.on_english_words_change()
 
     def on_english_words_change(self) -> None:
-        database = Database.get_instance()
-        english_words = database.select_all_english_words()
+        db = database.Database.get_instance()
+        english_words = db.select_all_english_words()
         gui.Gui.get_instance().refresh_table(english_words)

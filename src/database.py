@@ -3,12 +3,11 @@ from typing import Union
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from orm_base import OrmBase
-from english_word import EnglishWord
-from sound import Sound
-from image import Image
-from singleton import Singleton
 
-class Database(Singleton):
+import english_word;
+import singleton;
+
+class Database(singleton.Singleton):
     @classmethod
     def get_connection_string(cls, filepath) -> str:
         return f"sqlite:///{filepath}"
@@ -24,22 +23,23 @@ class Database(Singleton):
 
     def add_english_words(
         self,
-        english_words:list[EnglishWord],
+        english_words:list[english_word.EnglishWord],
         skip_existing_word:bool
         ) -> None:
 
+        EnglishWord = english_word.EnglishWord
         session = self.Session()
-        for english_word in english_words:
+        for word_i in english_words:
             record = (session.query(EnglishWord)
-                .filter(EnglishWord.word == english_word.word)
+                .filter(EnglishWord.word == word_i.word)
                 .first())
             if record != None and skip_existing_word:
                 continue
-            session.add(english_word)
+            session.add(word_i)
         session.commit()
 
-    def select_all_english_words(self) -> list[EnglishWord]:
+    def select_all_english_words(self) -> list[english_word.EnglishWord]:
         session = self.Session()
-        return session.query(EnglishWord).all()
+        return session.query(english_word.EnglishWord).all()
 
 
