@@ -37,3 +37,9 @@ class Database(Singleton):
                 continue
             session.add(english_word)
         session.commit()
+
+    def select_all_english_words(self) -> list[EnglishWord]:
+        session = self.Session()
+        return session.query(EnglishWord).all()
+
+

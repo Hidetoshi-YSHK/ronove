@@ -32,3 +32,10 @@ class Ronove(Singleton):
 
         database = Database.get_instance()
         database.add_english_words(english_words, skip_existing_word)
+        self.on_english_words_change()
+
+    def on_english_words_change(self) -> None:
+        database = Database.get_instance()
+        english_words = database.select_all_english_words()
+        for english_word in english_words:
+            print(vars(english_word))
