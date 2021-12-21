@@ -3,16 +3,13 @@ import os
 import os.path as path
 from typing import Union
 
-import gui;
-import database;
-import english_word;
-import singleton;
+import gui
+import database
+import english_word
+import singleton
 
 class Ronove(singleton.Singleton):
     DB_FILE_NAME = "data.db"
-
-    def __init__(self) -> None:
-        super().__init__()
 
     def get_exe_dir(self) -> str:
         return path.dirname(path.abspath(sys.argv[0]))
@@ -40,3 +37,6 @@ class Ronove(singleton.Singleton):
         db = database.Database.get_instance()
         english_words = db.select_all_english_words()
         gui.Gui.get_instance().refresh_table(english_words)
+
+    def on_app_start(self) -> None:
+        self.on_english_words_change()

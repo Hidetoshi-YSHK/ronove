@@ -4,8 +4,10 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from orm_base import OrmBase
 
-import english_word;
-import singleton;
+import english_word
+import sound
+import image
+import singleton
 
 class Database(singleton.Singleton):
     @classmethod

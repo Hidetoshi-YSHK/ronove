@@ -1,4 +1,4 @@
-from typing import Any, Literal 
+from typing import Any, Literal, Optional 
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog as filedialog
@@ -6,10 +6,10 @@ import tkinter.messagebox as messagebox
 import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
 
-import ronove;
-import resources;
-import english_word;
-import singleton;
+import ronove
+import resources
+import english_word
+import singleton
 
 class Gui(singleton.Singleton):
     WINDOW_MIN_WIDTH = 1280
@@ -18,12 +18,13 @@ class Gui(singleton.Singleton):
     BUTTON_HEIGHT = 48
     _GRID_UNIFORM_TOP = "grid_group_top"
 
-    def __init__(self) -> None:
+    def initialize(self) -> None:
+        self.table : Optional[_Table] = None
+
         self.root = tkdnd.Tk()
         self.root.geometry(f"{self.WINDOW_MIN_WIDTH}x{self.WINDOW_MIN_HEIGHT}")
         self.root.minsize(
             width=self.WINDOW_MIN_WIDTH, height=self.WINDOW_MIN_HEIGHT)
-
         _LeftFrame(self.root).deploy()
         _RightFrame(self.root).deploy()
         self.root.grid_columnconfigure(
@@ -38,7 +39,44 @@ class Gui(singleton.Singleton):
     def refresh_table(
         self,
         english_words:list[english_word.EnglishWord]) -> None:
-        pass
+        if self.table is None:
+            return
+        self.table.delete(*self.table.get_children())
+        for x in english_words:
+            self.table.insert(
+                "",
+                tk.END,
+                iid=str(x.id),
+                values=(
+                    x.id,
+                    x.word,
+                    self.get_status_string(x.status),
+                    self.get_japanese_word_string(x.japanese_word),
+                    x.pronunciation,
+                    self.get_sound_string(x.sound_id),
+                    self.get_image_string(x.image_id)
+                )
+            )
+
+    def get_status_string(self, status:int) -> str:
+        EnglishWord = english_word.EnglishWord
+        status_string = {
+            EnglishWord.STATUS_UNPROCESSED : "未処理",
+            EnglishWord.STATUS_PROCESSING : "処理中",
+            EnglishWord.STATUS_PROCESSED : "処理済",
+            EnglishWord.STATUS_ERROR : "エラー",
+            }
+        return status_string[status]
+
+    def get_japanese_word_string(self, japanese_word:str) -> str:
+        return "" if japanese_word is None else japanese_word
+
+    def get_sound_string(self, sound_id:int) -> str:
+        return "なし" if sound_id is None else "あり"
+        
+    def get_image_string(self, image_id:int) -> str:
+        return "なし" if image_id is None else "あり"
+
 
 class _LeftFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -79,6 +117,7 @@ class _TableFrame(tk.Frame):
             self, orient = tk.VERTICAL, command=self.table.yview)
         self.table.configure(xscrollcommand=self.scrollbar_h.set)
         self.table.configure(yscrollcommand=self.scrollbar_v.set)
+        Gui.get_instance().table = self.table
 
     def deploy(self) -> None:
         self.scrollbar_h.pack(side=tk.BOTTOM, anchor=tk.S, fill=tk.X)
