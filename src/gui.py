@@ -100,9 +100,11 @@ class _ButtonFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
         super().__init__(master)
         self.open_file_button = _OpenFileButton(self)
+        self.download_button = _DownloadButton(self)
 
     def deploy(self) -> None:
         self.open_file_button.deploy()
+        self.download_button.deploy()
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
 
 class _TableFrame(tk.Frame):
@@ -126,7 +128,7 @@ class _TableFrame(tk.Frame):
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.BOTH, expand=True)
 
 class _OpenFileButton(tk.Button):
-    def __init__(self, master: Any) -> None:
+    def __init__(self, master:Any) -> None:
         Resources = resources.Resources
         self.image = Image.open(Resources.OPEN_FILE_BUTTON.get_path())
         self.photo_image = ImageTk.PhotoImage(self.image)
@@ -153,6 +155,26 @@ class _OpenFileButton(tk.Button):
             skip_existing_word = (answer == messagebox.YES)
             rnv = ronove.Ronove.get_instance()
             rnv.load_english_word_file(filepath, skip_existing_word)
+
+class _DownloadButton(tk.Button):
+    def __init__(self, master:Any) -> None:
+        Resources = resources.Resources
+        self.image = Image.open(Resources.PROCESS_BUTTON.get_path())
+        self.photo_image = ImageTk.PhotoImage(self.image)
+        super().__init__(
+            master,
+            text="process",
+            image=self.photo_image,
+            compound=tk.TOP,
+            width=Gui.BUTTON_WIDTH,
+            height=Gui.BUTTON_HEIGHT,
+            command=self.onclick)
+
+    def deploy(self) -> None:
+        super().pack(side=tk.LEFT)
+
+    def onclick(self) -> None:
+        pass
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
