@@ -5,6 +5,7 @@ import tkinter.filedialog as filedialog
 import tkinter.messagebox as messagebox
 import tkinterdnd2 as tkdnd
 from PIL import Image, ImageTk
+import threading
 
 import ronove
 import resources
@@ -25,8 +26,10 @@ class Gui(singleton.Singleton):
         self.root.geometry(f"{self.WINDOW_MIN_WIDTH}x{self.WINDOW_MIN_HEIGHT}")
         self.root.minsize(
             width=self.WINDOW_MIN_WIDTH, height=self.WINDOW_MIN_HEIGHT)
-        _LeftFrame(self.root).deploy()
-        _RightFrame(self.root).deploy()
+        self.left_frame = _LeftFrame(self.root)
+        self.left_frame.deploy()
+        self.right_frame = _RightFrame(self.root)
+        self.right_frame.deploy()
         self.root.grid_columnconfigure(
             0, weight=12, uniform=self._GRID_UNIFORM_TOP)
         self.root.grid_columnconfigure(
@@ -77,6 +80,14 @@ class Gui(singleton.Singleton):
     def get_image_string(self, image_id:int) -> str:
         return "なし" if image_id is None else "あり"
 
+    def disable_controls(self) -> None:
+        self.left_frame.disable_controls()
+        self.right_frame.disable_controls()
+
+    def enable_controls(self) -> None:
+        self.left_frame.enable_controls()
+        self.right_frame.enable_controls()
+
 
 class _LeftFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -89,12 +100,26 @@ class _LeftFrame(tk.Frame):
         self.table_frame.deploy()
         super().grid(row=0, column=0, sticky=tk.NSEW)
 
+    def disable_controls(self) -> None:
+        self.button_frame.disable_controls()
+        self.table_frame.disable_controls()
+
+    def enable_controls(self) -> None:
+        self.button_frame.enable_controls()
+        self.table_frame.enable_controls()
+
 class _RightFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
         super().__init__(master, bg="#00ff00")
 
     def deploy(self) -> None:
         super().grid(row=0, column=1, sticky=tk.NSEW)
+
+    def disable_controls(self) -> None:
+        pass
+
+    def enable_controls(self) -> None:
+        pass
 
 class _ButtonFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -106,6 +131,14 @@ class _ButtonFrame(tk.Frame):
         self.open_file_button.deploy()
         self.process_button.deploy()
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
+
+    def disable_controls(self) -> None:
+        self.open_file_button.config(state=tk.DISABLED)
+        self.process_button.config(state=tk.DISABLED)
+
+    def enable_controls(self) -> None:
+        self.open_file_button.config(state=tk.NORMAL)
+        self.process_button.config(state=tk.NORMAL)
 
 class _TableFrame(tk.Frame):
     _BG_COLOR = "#808080"
@@ -126,6 +159,13 @@ class _TableFrame(tk.Frame):
         self.scrollbar_v.pack(side=tk.RIGHT, anchor=tk.E, fill=tk.Y)
         self.table.deploy()
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.BOTH, expand=True)
+
+    def disable_controls(self) -> None:
+        pass
+
+    def enable_controls(self) -> None:
+        pass
+
 
 class _OpenFileButton(tk.Button):
     def __init__(self, master:Any) -> None:
@@ -153,8 +193,16 @@ class _OpenFileButton(tk.Button):
                 "既存の単語をスキップしますか？",
                 icon=messagebox.INFO)
             skip_existing_word = (answer == messagebox.YES)
-            rnv = ronove.Ronove.get_instance()
-            rnv.load_english_word_file(filepath, skip_existing_word)
+            Gui.get_instance().disable_controls()
+            thread = threading.Thread(
+                target=self.do_task,
+                args=(filepath, skip_existing_word))
+            thread.start()
+
+    def do_task(self, filepath:str, skip_existing_word:bool) -> None:
+        rnv = ronove.Ronove.get_instance()
+        rnv.load_english_word_file(filepath, skip_existing_word)
+        Gui.get_instance().enable_controls()
 
 class _ProcessButton(tk.Button):
     def __init__(self, master:Any) -> None:
