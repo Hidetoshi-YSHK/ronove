@@ -100,11 +100,11 @@ class _ButtonFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
         super().__init__(master)
         self.open_file_button = _OpenFileButton(self)
-        self.download_button = _DownloadButton(self)
+        self.process_button = _ProcessButton(self)
 
     def deploy(self) -> None:
         self.open_file_button.deploy()
-        self.download_button.deploy()
+        self.process_button.deploy()
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
 
 class _TableFrame(tk.Frame):
@@ -156,7 +156,7 @@ class _OpenFileButton(tk.Button):
             rnv = ronove.Ronove.get_instance()
             rnv.load_english_word_file(filepath, skip_existing_word)
 
-class _DownloadButton(tk.Button):
+class _ProcessButton(tk.Button):
     def __init__(self, master:Any) -> None:
         Resources = resources.Resources
         self.image = Image.open(Resources.PROCESS_BUTTON.get_path())
