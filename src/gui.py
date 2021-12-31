@@ -74,6 +74,25 @@ class Gui(singleton.Singleton):
             self.export_progress_dialog.destroy()
             self.export_progress_dialog = None
 
+    def initialize_export_progress(
+        self,
+        sound_file_num:int,
+        image_file_num:int) -> None:
+        if self.export_progress_dialog:
+            self.export_progress_dialog.initialize_progress(
+                sound_file_num, image_file_num)
+
+    def on_export_sound(self) -> None:
+        if self.export_progress_dialog:
+            self.export_progress_dialog.on_export_sound()
+
+    def on_export_image(self) -> None:
+        if self.export_progress_dialog:
+            self.export_progress_dialog.on_export_image()
+
+    def on_export_csv(self) -> None:
+        if self.export_progress_dialog:
+            self.export_progress_dialog.on_export_csv()
 
 class _LeftFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -253,8 +272,7 @@ class _ExportButton(tk.Button):
 
     def do_task(self, directory_path:str) -> None:
         rnv = ronove.Ronove.get_instance()
-        #rnv.export(directory_path)
-        time.sleep(20)
+        rnv.export(directory_path)
         gui = Gui.get_instance()
         gui.enable_controls()
         gui.close_export_progress_dialog()
@@ -386,10 +404,16 @@ class _Table(ttk.Treeview):
 class _ExportProgressDialog(tk.Toplevel):
     TITLE = "エクスポート中"
     WIDTH = 300
-    HEIGHT = 100
+    HEIGHT = 50
     CLOSE_PROTOCOL = "WM_DELETE_WINDOW"
+    PROGRESS_MAX = 100
+    PROGRESS_MODE = "determinate"
+    PROGRESS_TEXT_SOUND = "音声ファイル出力中"
+    PROGRESS_TEXT_IMAGE = "画像ファイル出力中"
+    PROGRESS_TEXT_CSV = "CSVファイル出力中"
+    PROGRESS_TEXT_DONE = "完了"
 
-    def __init__(self, master:Any, center_x:int, center_y:int):
+    def __init__(self, master:Any, center_x:int, center_y:int) -> None:
         super().__init__(master)
         self.title(self.TITLE)
         left = center_x - self.WIDTH // 2
@@ -400,3 +424,73 @@ class _ExportProgressDialog(tk.Toplevel):
         self.transient(master)
         self.protocol(self.CLOSE_PROTOCOL, lambda:None)
         self.resizable(False, False)
+
+        self.progress_label = tk.Label(self)
+        self.progress_label.pack()
+
+        self.progressbar = ttk.Progressbar(
+            self,
+            orient=tk.HORIZONTAL,
+            maximum=self.PROGRESS_MAX,
+            mode=self.PROGRESS_MODE)
+        self.progressbar.pack(fill=tk.BOTH, expand=True)
+
+        self.sound_file_num = 0
+        self.image_file_num = 0
+        self.csv_file_num = 0
+        self.exported_sound_file_count = 0
+        self.exported_image_file_count = 0
+        self.exported_csv_file_count = 0
+
+    def set_progress_text(self, text:str) -> None:
+        self.progress_label.config(text=text)
+
+    def set_progress_percent(self, percent:int) -> None:
+        self.progressbar.config(value=percent)
+
+    def initialize_progress(
+        self,
+        sound_file_num:int,
+        image_file_num:int) -> None:
+        self.sound_file_num = sound_file_num
+        self.image_file_num = image_file_num
+        self.csv_file_num = 1
+        self.exported_sound_file_count = 0
+        self.exported_image_file_count = 0
+        self.exported_csv_file_count = 0
+        self._update_progress()
+
+    def on_export_sound(self) -> None:
+        self.exported_sound_file_count += 1
+        self._update_progress()
+
+    def on_export_image(self) -> None:
+        self.exported_image_file_count += 1
+        self._update_progress()
+
+    def on_export_csv(self) -> None:
+        self.exported_csv_file_count += 1
+        self._update_progress()
+
+    def _update_progress(self) -> None:
+        total_file_num = (
+            self.sound_file_num +
+            self.image_file_num +
+            self.csv_file_num)
+        exported_file_count = (
+            self.exported_sound_file_count +
+            self.exported_image_file_count +
+            self.exported_csv_file_count)
+
+        progress_percent = int(100 * exported_file_count / total_file_num)
+        self.set_progress_percent(progress_percent)
+
+        # 音声、画像、CSVの順でエクスポートする前提になっている
+        if exported_file_count < self.sound_file_num:
+            self.set_progress_text(self.PROGRESS_TEXT_SOUND)
+        elif exported_file_count < (self.sound_file_num + self.image_file_num):
+            self.set_progress_text(self.PROGRESS_TEXT_IMAGE)
+        elif exported_file_count < total_file_num:
+            self.set_progress_text(self.PROGRESS_TEXT_CSV)
+        else:
+            self.set_progress_text(self.PROGRESS_TEXT_DONE)

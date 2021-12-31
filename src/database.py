@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Optional
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from orm_base import OrmBase
@@ -95,8 +95,32 @@ class Database(singleton.Singleton):
         session.close()
         return records
 
+    def select_sound_of(
+        self, word:english_word.EnglishWord) -> Optional[sound.Sound]:
+        if word.sound_id is None:
+            return None
+        Sound = sound.Sound
+        session = self.Session()
+        record = (session.query(Sound)
+            .filter(Sound.id == word.sound_id)
+            .first())
+        session.close()
+        return record
+
     def select_all_images(self) -> list[image.Image]:
         session = self.Session()
         records = session.query(image.Image).all()
         session.close()
         return records
+
+    def select_image_of(
+        self, word:english_word.EnglishWord) -> Optional[image.Image]:
+        if word.image_id is None:
+            return None
+        Image = image.Image
+        session = self.Session()
+        record = (session.query(Image)
+            .filter(Image.id == word.image_id)
+            .first())
+        session.close()
+        return record

@@ -20,6 +20,7 @@ class Ronove(singleton.Singleton):
     CSV_FILE_ENCODING = "utf_8"
     MEDIA_DIR_NAME = "media"
     INTERVAL_SECONDS = 10
+    PREFIX = "ronove"
 
     def get_exe_dir(self) -> str:
         return path.dirname(path.abspath(sys.argv[0]))
@@ -107,6 +108,38 @@ class Ronove(singleton.Singleton):
         self._export_media_files(directory_path)
         self._export_csv_file(directory_path)
 
+    def _export_media_files(self, directory_path:str) -> None:
+        media_dir_path = path.join(directory_path, self.MEDIA_DIR_NAME)
+        if not path.isdir(media_dir_path):
+            os.makedirs(media_dir_path)
+
+        db = database.Database.get_instance()
+        sounds = db.select_all_sounds()
+        images = db.select_all_images()
+
+        g = gui.Gui.get_instance()
+        g.initialize_export_progress(len(sounds), len(images))
+
+        for sound_i in sounds:
+            self._export_sound_file(media_dir_path, sound_i)
+            g.on_export_sound()
+
+        for image_i in images:
+            self._export_image_file(media_dir_path, image_i)
+            g.on_export_image()
+
+    def _export_sound_file(self, media_dir_path:str, snd:sound.Sound) -> None:
+        sound_file_path = path.join(
+            media_dir_path, self._get_sound_file_name(snd))
+        with open(sound_file_path, "wb") as f:
+            f.write(snd.data)
+
+    def _export_image_file(self, media_dir_path:str, img:image.Image) -> None:
+        image_file_path = path.join(
+            media_dir_path, self._get_image_file_name(img))
+        with open(image_file_path, "wb") as f:
+            f.write(img.data)
+
     def _export_csv_file(self, directory_path:str) -> None:
         with open(
             path.join(directory_path, self.CSV_FILE_NAME),
@@ -119,13 +152,15 @@ class Ronove(singleton.Singleton):
             english_words = db.select_all_english_words()
             for word_i in english_words:
                 sound_column = ""
-                if word_i.sound is not None:
-                    sound_file_name = self.get_sound_file_name(word_i.sound)
+                snd = db.select_sound_of(word_i)
+                if snd is not None:
+                    sound_file_name = self._get_sound_file_name(snd)
                     sound_column = f"[sound:{sound_file_name}]"
 
                 image_column = ""
-                if word_i.image is not None:
-                    image_file_name = self.get_image_file_name(word_i.image)
+                img = db.select_image_of(word_i)
+                if img is not None:
+                    image_file_name = self._get_image_file_name(img)
                     image_column = f"<img src='{image_file_name}'>"
 
                 writer.writerow([
@@ -135,38 +170,14 @@ class Ronove(singleton.Singleton):
                     sound_column,
                     image_column])
 
-    def _export_media_files(self, directory_path:str) -> None:
-        media_dir_path = path.join(directory_path, self.MEDIA_DIR_NAME)
-        if not path.isdir(media_dir_path):
-            os.makedirs(media_dir_path)
+        g = gui.Gui.get_instance()
+        g.on_export_csv()
 
-        db = database.Database.get_instance()
+    def _get_sound_file_name(self, snd:sound.Sound) -> str:
+        return f"{self.PREFIX}{snd.id:08}.{snd.extension}"
 
-        sounds = db.select_all_sounds()
-        for sound_i in sounds:
-            self._export_sound_file(media_dir_path, sound_i)
-
-        images = db.select_all_images()
-        for image_i in images:
-            self._export_image_file(media_dir_path, image_i)
-
-    def _export_sound_file(self, media_dir_path:str, snd:sound.Sound) -> None:
-        sound_file_path = path.join(
-            media_dir_path, self.get_sound_file_name(snd))
-        with open(sound_file_path, "wb") as f:
-            f.write(snd.data)
-
-    def _export_image_file(self, media_dir_path:str, img:image.Image) -> None:
-        image_file_path = path.join(
-            media_dir_path, self.get_image_file_name(img))
-        with open(image_file_path, "wb") as f:
-            f.write(img.data)
-
-    def get_sound_file_name(self, snd:sound.Sound) -> str:
-        return f"{snd.id:08}.{snd.extension}"
-
-    def get_image_file_name(self, img:image.Image) -> str:
-        return f"{img.id:08}.{img.extension}"
+    def _get_image_file_name(self, img:image.Image) -> str:
+        return f"{self.PREFIX}{img.id:08}.{img.extension}"
 
     def on_app_start(self) -> None:
         self.on_english_words_change()
