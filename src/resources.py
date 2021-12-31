@@ -7,6 +7,7 @@ _RESOURCES_DIR = "resources"
 class Resources(enum.Enum):
     OPEN_FILE_BUTTON = path.join(_RESOURCES_DIR, "open_file.png")
     PROCESS_BUTTON = path.join(_RESOURCES_DIR, "process.png")
+    EXPORT_BUTTON = path.join(_RESOURCES_DIR, "export.png")
 
     def get_path(self):
         TMP_DIR_ATTR = "_MEIPASS"
