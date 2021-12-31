@@ -7,6 +7,8 @@ import gui
 import database
 import english_word
 import singleton
+import weblio_page
+import eijirou_page
 
 class Ronove(singleton.Singleton):
     DB_FILE_NAME = "data.db"
@@ -37,6 +39,26 @@ class Ronove(singleton.Singleton):
         db = database.Database.get_instance()
         english_words = db.select_all_english_words()
         gui.Gui.get_instance().refresh_table(english_words)
+
+    def process_english_words(self) -> None:
+        EnglishWord = english_word.EnglishWord
+        db = database.Database.get_instance()
+        english_words = db.select_all_english_words()
+        for word_i in english_words:
+            if word_i.status == EnglishWord.STATUS_PROCESSED:
+                continue
+
+            word_i.status = EnglishWord.STATUS_PROCESSING
+            db.update_english_word(word_i)
+            self.on_english_words_change()
+
+            self.process_englis_word(word_i)
+
+            db.update_english_word(word_i)
+            self.on_english_words_change()
+
+    def process_englis_word(self, word:english_word.EnglishWord) -> None:
+        pass
 
     def on_app_start(self) -> None:
         self.on_english_words_change()

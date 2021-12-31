@@ -39,9 +39,31 @@ class Database(singleton.Singleton):
                 continue
             session.add(word_i)
         session.commit()
+        session.close()
 
     def select_all_english_words(self) -> list[english_word.EnglishWord]:
         session = self.Session()
-        return session.query(english_word.EnglishWord).all()
+        english_words = session.query(english_word.EnglishWord).all()
+        session.close()
+        return english_words
 
-
+    def update_english_word(self, word:english_word.EnglishWord) -> None:
+        session = self.Session()
+        try:
+            EnglishWord = english_word.EnglishWord
+            record = (session.query(EnglishWord)
+                .filter(EnglishWord.id == word.id)
+                .one())
+            if record.word != word.word:
+                raise Exception("A word mismatch happened.")
+            record.status = word.status
+            record.japanese_word = word.japanese_word
+            record.pronunciation = word.pronunciation
+            record.sound_id = word.sound_id
+            record.image_id = word.image_id
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()

@@ -174,7 +174,8 @@ class _ProcessButton(tk.Button):
         super().pack(side=tk.LEFT)
 
     def onclick(self) -> None:
-        pass
+        rnv = ronove.Ronove.get_instance()
+        rnv.process_english_words()
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
