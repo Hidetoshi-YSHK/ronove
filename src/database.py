@@ -59,7 +59,6 @@ class Database(singleton.Singleton):
             raise Exception("A word mismatch happened.")
         return record
 
-
     def update_english_word(self, word:english_word.EnglishWord) -> None:
         session = self.Session()
         try:
@@ -89,3 +88,15 @@ class Database(singleton.Singleton):
         if snd.id is None:
             raise Exception("sound.id is None.")
         return snd.id
+
+    def select_all_sounds(self) -> list[sound.Sound]:
+        session = self.Session()
+        records = session.query(sound.Sound).all()
+        session.close()
+        return records
+
+    def select_all_images(self) -> list[image.Image]:
+        session = self.Session()
+        records = session.query(image.Image).all()
+        session.close()
+        return records

@@ -2,20 +2,23 @@ import sys
 import os
 import os.path as path
 import time
+import csv
 from typing import Union
-
-from sqlalchemy.sql.schema import Column
 
 import gui
 import database
 import english_word
 import sound
+import image
 import singleton
 import weblio_page
 import eijirou_page
 
 class Ronove(singleton.Singleton):
     DB_FILE_NAME = "data.db"
+    CSV_FILE_NAME = "ronove.csv"
+    CSV_FILE_ENCODING = "utf_8"
+    MEDIA_DIR_NAME = "media"
     INTERVAL_SECONDS = 10
 
     def get_exe_dir(self) -> str:
@@ -97,6 +100,73 @@ class Ronove(singleton.Singleton):
         word.status = english_word.EnglishWord.STATUS_PROCESSED
         db = database.Database.get_instance()
         db.update_english_word(word)
+
+    def export(self, directory_path:str) -> None:
+        if not path.isdir(directory_path):
+            os.makedirs(directory_path)
+        self._export_media_files(directory_path)
+        self._export_csv_file(directory_path)
+
+    def _export_csv_file(self, directory_path:str) -> None:
+        with open(
+            path.join(directory_path, self.CSV_FILE_NAME),
+            'w',
+            encoding=self.CSV_FILE_ENCODING,
+            newline="") as f:
+
+            writer = csv.writer(f)
+            db = database.Database.get_instance()
+            english_words = db.select_all_english_words()
+            for word_i in english_words:
+                sound_column = ""
+                if word_i.sound is not None:
+                    sound_file_name = self.get_sound_file_name(word_i.sound)
+                    sound_column = f"[sound:{sound_file_name}]"
+
+                image_column = ""
+                if word_i.image is not None:
+                    image_file_name = self.get_image_file_name(word_i.image)
+                    image_column = f"<img src='{image_file_name}'>"
+
+                writer.writerow([
+                    word_i.word,
+                    word_i.pronunciation,
+                    word_i.japanese_words,
+                    sound_column,
+                    image_column])
+
+    def _export_media_files(self, directory_path:str) -> None:
+        media_dir_path = path.join(directory_path, self.MEDIA_DIR_NAME)
+        if not path.isdir(media_dir_path):
+            os.makedirs(media_dir_path)
+
+        db = database.Database.get_instance()
+
+        sounds = db.select_all_sounds()
+        for sound_i in sounds:
+            self._export_sound_file(media_dir_path, sound_i)
+
+        images = db.select_all_images()
+        for image_i in images:
+            self._export_image_file(media_dir_path, image_i)
+
+    def _export_sound_file(self, media_dir_path:str, snd:sound.Sound) -> None:
+        sound_file_path = path.join(
+            media_dir_path, self.get_sound_file_name(snd))
+        with open(sound_file_path, "wb") as f:
+            f.write(snd.data)
+
+    def _export_image_file(self, media_dir_path:str, img:image.Image) -> None:
+        image_file_path = path.join(
+            media_dir_path, self.get_image_file_name(img))
+        with open(image_file_path, "wb") as f:
+            f.write(img.data)
+
+    def get_sound_file_name(self, snd:sound.Sound) -> str:
+        return f"{snd.id:08}.{snd.extension}"
+
+    def get_image_file_name(self, img:image.Image) -> str:
+        return f"{img.id:08}.{img.extension}"
 
     def on_app_start(self) -> None:
         self.on_english_words_change()

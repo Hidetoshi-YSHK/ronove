@@ -1,3 +1,5 @@
+import re
+import time
 from typing import Any, Literal, Optional 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -21,6 +23,7 @@ class Gui(singleton.Singleton):
 
     def initialize(self) -> None:
         self.table : Optional[_Table] = None
+        self.export_progress_dialog : Optional[_ExportProgressDialog] = None
 
         self.root = tkdnd.Tk()
         self.root.geometry(f"{self.WINDOW_MIN_WIDTH}x{self.WINDOW_MIN_HEIGHT}")
@@ -55,6 +58,21 @@ class Gui(singleton.Singleton):
     def enable_controls(self) -> None:
         self.left_frame.enable_controls()
         self.right_frame.enable_controls()
+
+    def open_export_progress_dialog(self) -> None:
+        geometry = re.split("[x+]", self.root.geometry())
+        width = int(geometry[0])
+        height = int(geometry[1])
+        left = int(geometry[2])
+        top = int(geometry[3])
+        cx = left + width // 2
+        cy = top + height // 2
+        self.export_progress_dialog = _ExportProgressDialog(self.root, cx, cy)
+
+    def close_export_progress_dialog(self) -> None:
+        if self.export_progress_dialog:
+            self.export_progress_dialog.destroy()
+            self.export_progress_dialog = None
 
 
 class _LeftFrame(tk.Frame):
@@ -222,14 +240,24 @@ class _ExportButton(tk.Button):
         super().pack(side=tk.LEFT)
 
     def onclick(self) -> None:
-        Gui.get_instance().disable_controls()
-        thread = threading.Thread(
-            target=self.do_task,
-            args=())
-        thread.start()
+        directory_path = filedialog.askdirectory(
+            title="エクスポート先のディレクトリを指定してください")
+        if directory_path:
+            gui = Gui.get_instance()
+            gui.disable_controls()
+            gui.open_export_progress_dialog()
+            thread = threading.Thread(
+                target=self.do_task,
+                args=(directory_path,))
+            thread.start()
 
-    def do_task(self) -> None:
-        pass
+    def do_task(self, directory_path:str) -> None:
+        rnv = ronove.Ronove.get_instance()
+        #rnv.export(directory_path)
+        time.sleep(20)
+        gui = Gui.get_instance()
+        gui.enable_controls()
+        gui.close_export_progress_dialog()
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
@@ -354,3 +382,21 @@ class _Table(ttk.Treeview):
         
     def get_image_string(self, image_id:Optional[int]) -> str:
         return "なし" if image_id is None else "あり"
+
+class _ExportProgressDialog(tk.Toplevel):
+    TITLE = "エクスポート中"
+    WIDTH = 300
+    HEIGHT = 100
+    CLOSE_PROTOCOL = "WM_DELETE_WINDOW"
+
+    def __init__(self, master:Any, center_x:int, center_y:int):
+        super().__init__(master)
+        self.title(self.TITLE)
+        left = center_x - self.WIDTH // 2
+        top = center_y - self.HEIGHT // 2
+        self.geometry(f"{self.WIDTH}x{self.HEIGHT}+{left}+{top}")
+        self.grab_set()
+        self.focus_set()
+        self.transient(master)
+        self.protocol(self.CLOSE_PROTOCOL, lambda:None)
+        self.resizable(False, False)
