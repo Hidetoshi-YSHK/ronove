@@ -204,7 +204,7 @@ class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
     _COLUMN_ENGLISH_WORD = "english_word"
     _COLUMN_STATUS = "status"
-    _COLUMN_JAPANESE_WORD = "japanese_word"
+    _COLUMN_JAPANESE_WORDS = "japanese_words"
     _COLUMN_PRONUNCIATION = "pronunciation"
     _COLUMN_SOUND = "sound"
     _COLUMN_IMAGE = "image"
@@ -213,7 +213,7 @@ class _Table(ttk.Treeview):
         _COLUMN_ID,
         _COLUMN_ENGLISH_WORD,
         _COLUMN_STATUS,
-        _COLUMN_JAPANESE_WORD,
+        _COLUMN_JAPANESE_WORDS,
         _COLUMN_PRONUNCIATION,
         _COLUMN_SOUND,
         _COLUMN_IMAGE,
@@ -223,7 +223,7 @@ class _Table(ttk.Treeview):
         _COLUMN_ID : 50,
         _COLUMN_ENGLISH_WORD : 200,
         _COLUMN_STATUS : 80,
-        _COLUMN_JAPANESE_WORD : 300,
+        _COLUMN_JAPANESE_WORDS : 300,
         _COLUMN_PRONUNCIATION : 200,
         _COLUMN_SOUND : 50,
         _COLUMN_IMAGE : 50,
@@ -233,7 +233,7 @@ class _Table(ttk.Treeview):
         _COLUMN_ID : tk.CENTER,
         _COLUMN_ENGLISH_WORD : tk.W,
         _COLUMN_STATUS : tk.CENTER,
-        _COLUMN_JAPANESE_WORD : tk.W,
+        _COLUMN_JAPANESE_WORDS : tk.W,
         _COLUMN_PRONUNCIATION : tk.W,
         _COLUMN_SOUND : tk.CENTER,
         _COLUMN_IMAGE : tk.CENTER,
@@ -243,7 +243,7 @@ class _Table(ttk.Treeview):
         _COLUMN_ID : "ID",
         _COLUMN_ENGLISH_WORD : "英単語",
         _COLUMN_STATUS : "状態",
-        _COLUMN_JAPANESE_WORD : "日本語",
+        _COLUMN_JAPANESE_WORDS : "日本語",
         _COLUMN_PRONUNCIATION : "発音",
         _COLUMN_SOUND : "音声",
         _COLUMN_IMAGE : "画像",
@@ -280,8 +280,8 @@ class _Table(ttk.Treeview):
                     word.id,
                     word.word,
                     self.get_status_string(word.status),
-                    self.get_japanese_word_string(word.japanese_word),
-                    word.pronunciation,
+                    self.get_japanese_words_string(word.japanese_words),
+                    self.get_pronunciation_string(word.pronunciation),
                     self.get_sound_string(word.sound_id),
                     self.get_image_string(word.image_id)))
         else:
@@ -293,8 +293,8 @@ class _Table(ttk.Treeview):
                     word.id,
                     word.word,
                     self.get_status_string(word.status),
-                    self.get_japanese_word_string(word.japanese_word),
-                    word.pronunciation,
+                    self.get_japanese_words_string(word.japanese_words),
+                    self.get_pronunciation_string(word.pronunciation),
                     self.get_sound_string(word.sound_id),
                     self.get_image_string(word.image_id)))
 
@@ -312,11 +312,14 @@ class _Table(ttk.Treeview):
             }
         return status_string[status]
 
-    def get_japanese_word_string(self, japanese_word:str) -> str:
-        return "" if japanese_word is None else japanese_word
+    def get_japanese_words_string(self, japanese_words:Optional[str]) -> str:
+        return "" if japanese_words is None else japanese_words
 
-    def get_sound_string(self, sound_id:int) -> str:
+    def get_pronunciation_string(self, pronunciation:Optional[str]) -> str:
+        return "" if pronunciation is None else pronunciation
+
+    def get_sound_string(self, sound_id:Optional[int]) -> str:
         return "なし" if sound_id is None else "あり"
         
-    def get_image_string(self, image_id:int) -> str:
+    def get_image_string(self, image_id:Optional[int]) -> str:
         return "なし" if image_id is None else "あり"

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy import Integer, SmallInteger, String, LargeBinary
+import sqlalchemy
 from sqlalchemy.orm import relationship
 from orm_base import OrmBase
 
@@ -12,7 +13,7 @@ class EnglishWord(OrmBase):
     id = Column(Integer, primary_key=True, autoincrement=True)
     word = Column(String(length=256))
     status = Column(SmallInteger)
-    japanese_word = Column(String(length=256))
+    japanese_words = Column(String(length=256))
     pronunciation = Column(String(length=256))
     sound_id = Column(Integer, ForeignKey("sound.id"))
     image_id = Column(Integer, ForeignKey("image.id"))
@@ -27,9 +28,5 @@ class EnglishWord(OrmBase):
 
     def __init__(self, word:str) -> None:
         super().__init__()
-        self.id = None
         self.word = word
         self.status = EnglishWord.STATUS_UNPROCESSED
-        self.pronunciation = ""
-        self.sound = None
-        self.image = None

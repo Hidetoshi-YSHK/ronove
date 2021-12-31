@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 class WeblioPage:
     _URL_FORMAT = "https://ejje.weblio.jp/content/{}"
-    _CSS_SELECTOR_JAPANESE_WORDS = "div.summaryM td.content-explanation"
+    _CSS_SELECTOR_JAPANESE_WORDS = "div.summaryM span.content-explanation"
     _CSS_SELECTOR_PRONUNCIATION = "div.summaryM span.phoneticEjjeDesc"
     _CSS_SELECTOR_SOUND_FILE = "#ePsdDl a"
     _JAPANESE_DELIMITER = "、"
@@ -28,6 +28,7 @@ class WeblioPage:
             return []
 
     def get_joined_japanese_words(self) -> str:
+        print(self.get_japanese_words())
         return self._JAPANESE_DELIMITER_JOIN.join(self.get_japanese_words())
     
     def get_pronunciation(self) -> str:

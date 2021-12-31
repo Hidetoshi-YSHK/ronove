@@ -70,7 +70,7 @@ class Database(singleton.Singleton):
             if record.word != word.word:
                 raise Exception("A word mismatch happened.")
             record.status = word.status
-            record.japanese_word = word.japanese_word
+            record.japanese_words = word.japanese_words
             record.pronunciation = word.pronunciation
             record.sound_id = word.sound_id
             record.image_id = word.image_id
@@ -80,3 +80,12 @@ class Database(singleton.Singleton):
             raise
         finally:
             session.close()
+
+    def add_sound(self, snd:sound.Sound) -> int:
+        session = self.Session()
+        session.add(snd)
+        session.commit()
+        session.refresh(snd)
+        if snd.id is None:
+            raise Exception("sound.id is None.")
+        return snd.id
