@@ -28,7 +28,6 @@ class WeblioPage:
             return []
 
     def get_joined_japanese_words(self) -> str:
-        print(self.get_japanese_words())
         return self._JAPANESE_DELIMITER_JOIN.join(self.get_japanese_words())
     
     def get_pronunciation(self) -> str:

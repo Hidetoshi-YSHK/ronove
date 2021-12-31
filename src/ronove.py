@@ -72,12 +72,8 @@ class Ronove(singleton.Singleton):
         # Weblioからデータ取得
         weblio = weblio_page.WeblioPage(word.word)
         japanese_words = weblio.get_joined_japanese_words()
-        print(japanese_words)
         pronunciation = weblio.get_pronunciation()
-        print(pronunciation)
         sound_file_data = weblio.get_sound_file_data()
-        if sound_file_data:
-            print(len(sound_file_data))
 
         # 和訳が取得できなければエラー
         if not japanese_words:
