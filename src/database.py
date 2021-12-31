@@ -47,6 +47,19 @@ class Database(singleton.Singleton):
         session.close()
         return english_words
 
+    def select_one_english_word(
+        self, word:english_word.EnglishWord) -> english_word.EnglishWord:
+        session = self.Session()
+        EnglishWord = english_word.EnglishWord
+        record = (session.query(EnglishWord)
+            .filter(EnglishWord.id == word.id)
+            .one())
+        session.close()
+        if record.word != word.word:
+            raise Exception("A word mismatch happened.")
+        return record
+
+
     def update_english_word(self, word:english_word.EnglishWord) -> None:
         session = self.Session()
         try:

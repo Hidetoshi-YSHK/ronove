@@ -38,7 +38,12 @@ class Ronove(singleton.Singleton):
     def on_english_words_change(self) -> None:
         db = database.Database.get_instance()
         english_words = db.select_all_english_words()
-        gui.Gui.get_instance().refresh_table(english_words)
+        gui.Gui.get_instance().update_table(english_words)
+
+    def on_one_english_word_change(self, word:english_word.EnglishWord) -> None:
+        db = database.Database.get_instance()
+        word_db = db.select_one_english_word(word)
+        gui.Gui.get_instance().update_one_english_word(word_db)
 
     def process_english_words(self) -> None:
         EnglishWord = english_word.EnglishWord
@@ -50,12 +55,11 @@ class Ronove(singleton.Singleton):
 
             word_i.status = EnglishWord.STATUS_PROCESSING
             db.update_english_word(word_i)
-            self.on_english_words_change()
+            self.on_one_english_word_change(word_i)
 
             self.process_englis_word(word_i)
-
             db.update_english_word(word_i)
-            self.on_english_words_change()
+            self.on_one_english_word_change(word_i)
 
     def process_englis_word(self, word:english_word.EnglishWord) -> None:
         pass

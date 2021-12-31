@@ -39,46 +39,14 @@ class Gui(singleton.Singleton):
     def mainloop(self) -> None:
         self.root.mainloop()
 
-    def refresh_table(
-        self,
-        english_words:list[english_word.EnglishWord]) -> None:
-        if self.table is None:
-            return
-        self.table.delete(*self.table.get_children())
-        for x in english_words:
-            self.table.insert(
-                "",
-                tk.END,
-                iid=str(x.id),
-                values=(
-                    x.id,
-                    x.word,
-                    self.get_status_string(x.status),
-                    self.get_japanese_word_string(x.japanese_word),
-                    x.pronunciation,
-                    self.get_sound_string(x.sound_id),
-                    self.get_image_string(x.image_id)
-                )
-            )
+    def update_table(
+        self, english_words:list[english_word.EnglishWord]) -> None:
+        if self.table is not None:
+            self.table.update_english_words(english_words)
 
-    def get_status_string(self, status:int) -> str:
-        EnglishWord = english_word.EnglishWord
-        status_string = {
-            EnglishWord.STATUS_UNPROCESSED : "未処理",
-            EnglishWord.STATUS_PROCESSING : "処理中",
-            EnglishWord.STATUS_PROCESSED : "処理済",
-            EnglishWord.STATUS_ERROR : "エラー",
-            }
-        return status_string[status]
-
-    def get_japanese_word_string(self, japanese_word:str) -> str:
-        return "" if japanese_word is None else japanese_word
-
-    def get_sound_string(self, sound_id:int) -> str:
-        return "なし" if sound_id is None else "あり"
-        
-    def get_image_string(self, image_id:int) -> str:
-        return "なし" if image_id is None else "あり"
+    def update_one_english_word(self, word:english_word.EnglishWord) -> None:
+        if self.table is not None:
+            self.table.update_one_english_word(word)
 
     def disable_controls(self) -> None:
         self.left_frame.disable_controls()
@@ -166,7 +134,6 @@ class _TableFrame(tk.Frame):
     def enable_controls(self) -> None:
         pass
 
-
 class _OpenFileButton(tk.Button):
     def __init__(self, master:Any) -> None:
         Resources = resources.Resources
@@ -222,8 +189,16 @@ class _ProcessButton(tk.Button):
         super().pack(side=tk.LEFT)
 
     def onclick(self) -> None:
+        Gui.get_instance().disable_controls()
+        thread = threading.Thread(
+            target=self.do_task,
+            args=())
+        thread.start()
+
+    def do_task(self) -> None:
         rnv = ronove.Ronove.get_instance()
         rnv.process_english_words()
+        Gui.get_instance().enable_controls()
 
 class _Table(ttk.Treeview):
     _COLUMN_ID = "id"
@@ -291,3 +266,57 @@ class _Table(ttk.Treeview):
 
     def deploy(self) -> None:
         super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.Y, expand=True)
+
+    def update_english_words(
+        self, english_words:list[english_word.EnglishWord]) -> None:
+        for word_i in english_words:
+            self.update_one_english_word(word_i)
+
+    def update_one_english_word(self, word:english_word.EnglishWord) -> None:
+        if self.has(word):
+            self.item(
+                str(word.id),
+                values=(
+                    word.id,
+                    word.word,
+                    self.get_status_string(word.status),
+                    self.get_japanese_word_string(word.japanese_word),
+                    word.pronunciation,
+                    self.get_sound_string(word.sound_id),
+                    self.get_image_string(word.image_id)))
+        else:
+            self.insert(
+                "",
+                tk.END,
+                iid=str(word.id),
+                values=(
+                    word.id,
+                    word.word,
+                    self.get_status_string(word.status),
+                    self.get_japanese_word_string(word.japanese_word),
+                    word.pronunciation,
+                    self.get_sound_string(word.sound_id),
+                    self.get_image_string(word.image_id)))
+
+    def has(self, english_word:english_word.EnglishWord) -> bool:
+        iid = str(english_word.id)
+        return self.exists(iid)
+
+    def get_status_string(self, status:int) -> str:
+        EnglishWord = english_word.EnglishWord
+        status_string = {
+            EnglishWord.STATUS_UNPROCESSED : "未処理",
+            EnglishWord.STATUS_PROCESSING : "処理中",
+            EnglishWord.STATUS_PROCESSED : "処理済",
+            EnglishWord.STATUS_ERROR : "エラー",
+            }
+        return status_string[status]
+
+    def get_japanese_word_string(self, japanese_word:str) -> str:
+        return "" if japanese_word is None else japanese_word
+
+    def get_sound_string(self, sound_id:int) -> str:
+        return "なし" if sound_id is None else "あり"
+        
+    def get_image_string(self, image_id:int) -> str:
+        return "なし" if image_id is None else "あり"
