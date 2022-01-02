@@ -20,6 +20,7 @@ class Gui(singleton.Singleton):
     BUTTON_WIDTH = 48
     BUTTON_HEIGHT = 48
     _GRID_UNIFORM_TOP = "grid_group_top"
+    _CONTROL_C_EVENT = "<Control-c>"
 
     def initialize(self) -> None:
         self.table : Optional[_Table] = None
@@ -39,6 +40,7 @@ class Gui(singleton.Singleton):
         self.root.grid_columnconfigure(
             1, weight=4, uniform=self._GRID_UNIFORM_TOP)
         self.root.grid_rowconfigure(0, weight=1)
+        self.root.bind(self._CONTROL_C_EVENT, self.on_control_c)
 
     def mainloop(self) -> None:
         self.root.mainloop()
@@ -98,6 +100,19 @@ class Gui(singleton.Singleton):
     def set_image_frame_visibility(self, visible:bool) -> None:
         if self.image_frame:
             self.image_frame.set_visibility(visible)
+
+    def get_selected_item_id(self) -> Optional[str]:
+        if self.table:
+            return self.table.get_selected_item_id()
+        else:
+            return None
+
+    def on_control_c(self, event) -> None:
+        if self.table:
+            word = self.table.get_selected_word()
+            if word:
+                self.root.clipboard_clear()
+                self.root.clipboard_append(word)
 
 class _LeftFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -335,6 +350,8 @@ class _Table(ttk.Treeview):
 
     _SHOW_OPTION = "headings"
 
+    _VALUES = "values"
+
     _SELECT_ITEM_EVENT = "<<TreeviewSelect>>"
 
     def __init__(self, master: Any) -> None:
@@ -433,6 +450,20 @@ class _Table(ttk.Treeview):
     def enable_controls(self) -> None:
         self.enabled = True
 
+    def get_selected_item_id(self) -> Optional[str]:
+        selection = self.selection()
+        if selection:
+            return selection[0]
+        else:
+            return None
+
+    def get_selected_word(self) -> Optional[str]:
+        iid = self.get_selected_item_id()
+        if iid:
+            values = self.item(iid, self._VALUES)
+            return values[1]
+        else:
+            return None
 
 class _ExportProgressDialog(tk.Toplevel):
     TITLE = "エクスポート中"
@@ -579,6 +610,8 @@ class _ImageLable(tk.Label):
 class _ImageCanvas(tk.Canvas):
     WIDTH = 200
     HEIGHT = 200
+    _DROP_EVENT = "<<Drop>>"
+
     def __init__(self, master: Any) -> None:
         super().__init__(
             master,
@@ -586,6 +619,8 @@ class _ImageCanvas(tk.Canvas):
             relief=tk.SOLID,
             width=self.WIDTH,
             height=self.HEIGHT)
+        self.drop_target_register(tkdnd.DND_FILES) # type: ignore
+        self.dnd_bind(self._DROP_EVENT, self.on_drop_files) # type: ignore
 
     def deploy(self) -> None:
         self.pack(side=tk.TOP, anchor=tk.N)
@@ -595,3 +630,23 @@ class _ImageCanvas(tk.Canvas):
 
     def enable_controls(self) -> None:
         pass
+
+    def on_drop_files(self, event) -> None:
+        thread = threading.Thread(
+            target=self.do_task,
+            args=(event.data,))
+        thread.start()
+        return event.action
+
+    def do_task(self, dropped_file_names) -> None:
+        if type(dropped_file_names) == str:
+            file_path = dropped_file_names.split()[0]
+            if not file_path:
+                return
+
+            iid = Gui.get_instance().get_selected_item_id()
+            if not iid:
+                return
+
+            rnv = ronove.Ronove.get_instance()
+            rnv.set_image_to_english_word(file_path, int(iid))

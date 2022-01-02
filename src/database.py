@@ -59,6 +59,16 @@ class Database(singleton.Singleton):
             raise Exception("A word mismatch happened.")
         return record
 
+    def select_one_english_word_by_id(
+        self, word_id:int) -> Optional[english_word.EnglishWord]:
+        session = self.Session()
+        EnglishWord = english_word.EnglishWord
+        record = (session.query(EnglishWord)
+            .filter(EnglishWord.id == word_id)
+            .first())
+        session.close()
+        return record
+
     def update_english_word(self, word:english_word.EnglishWord) -> None:
         session = self.Session()
         try:
@@ -107,6 +117,15 @@ class Database(singleton.Singleton):
         session.close()
         return record
 
+    def add_image(self, img:image.Image) -> int:
+        session = self.Session()
+        session.add(img)
+        session.commit()
+        session.refresh(img)
+        if img.id is None:
+            raise Exception("image.id is None.")
+        return img.id
+
     def select_all_images(self) -> list[image.Image]:
         session = self.Session()
         records = session.query(image.Image).all()
@@ -124,3 +143,12 @@ class Database(singleton.Singleton):
             .first())
         session.close()
         return record
+
+    def delete_image_by_id(self, image_id:int) -> None:
+        Image = image.Image
+        session = self.Session()
+        (session.query(Image)
+            .filter(Image.id == image_id)
+            .delete())
+        session.commit()
+        session.close()

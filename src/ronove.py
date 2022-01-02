@@ -13,6 +13,7 @@ import image
 import singleton
 import weblio_page
 import eijirou_page
+import image_processor
 
 class Ronove(singleton.Singleton):
     DB_FILE_NAME = "data.db"
@@ -178,6 +179,24 @@ class Ronove(singleton.Singleton):
 
     def _get_image_file_name(self, img:image.Image) -> str:
         return f"{self.PREFIX}{img.id:08}.{img.extension}"
+
+    def set_image_to_english_word(
+        self,
+        image_file_path:str,
+        english_word_id:int) -> None:
+        img_pro = image_processor.ImageProcessor.get_instance()
+        image_data = img_pro.load_and_preprocess(image_file_path)
+        if image_data:
+            db = database.Database.get_instance()
+            word = db.select_one_english_word_by_id(english_word_id)
+            if word:
+                if word.image_id:
+                    db.delete_image_by_id(word.image_id)
+                img = image.Image(image_data, image.Image.EXTENSION_JPG)
+                img_id = db.add_image(img)
+                word.image_id = img_id # type: ignore
+                db.update_english_word(word)
+                self.on_one_english_word_change(word)
 
     def on_app_start(self) -> None:
         self.on_english_words_change()

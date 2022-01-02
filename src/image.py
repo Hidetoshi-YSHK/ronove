@@ -17,3 +17,8 @@ class Image(OrmBase):
         uselist=False)
 
     __tablename__ = "image"
+
+    def __init__(self, data:bytes, extension:str) -> None:
+        super().__init__()
+        self.data = data
+        self.extension = extension
