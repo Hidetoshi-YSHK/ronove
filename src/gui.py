@@ -24,6 +24,7 @@ class Gui(singleton.Singleton):
     def initialize(self) -> None:
         self.table : Optional[_Table] = None
         self.export_progress_dialog : Optional[_ExportProgressDialog] = None
+        self.image_frame : Optional[_ImageFrame] = None
 
         self.root = tkdnd.Tk()
         self.root.geometry(f"{self.WINDOW_MIN_WIDTH}x{self.WINDOW_MIN_HEIGHT}")
@@ -94,9 +95,13 @@ class Gui(singleton.Singleton):
         if self.export_progress_dialog:
             self.export_progress_dialog.on_export_csv()
 
+    def set_image_frame_visibility(self, visible:bool) -> None:
+        if self.image_frame:
+            self.image_frame.set_visibility(visible)
+
 class _LeftFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
-        super().__init__(master, bg="#ff0000")
+        super().__init__(master, borderwidth=1, relief=tk.GROOVE)
         self.button_frame = _ButtonFrame(self)
         self.table_frame = _TableFrame(self)
 
@@ -115,16 +120,18 @@ class _LeftFrame(tk.Frame):
 
 class _RightFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
-        super().__init__(master, bg="#00ff00")
+        super().__init__(master, borderwidth=1, relief=tk.GROOVE)
+        self.image_frame = _ImageFrame(self)
 
     def deploy(self) -> None:
+        self.image_frame.deploy()
         super().grid(row=0, column=1, sticky=tk.NSEW)
 
     def disable_controls(self) -> None:
-        pass
+        self.image_frame.disable_controls()
 
     def enable_controls(self) -> None:
-        pass
+        self.image_frame.enable_controls()
 
 class _ButtonFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -137,7 +144,7 @@ class _ButtonFrame(tk.Frame):
         self.open_file_button.deploy()
         self.process_button.deploy()
         self.export_button.deploy()
-        super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
+        self.pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
 
     def disable_controls(self) -> None:
         self.open_file_button.config(state=tk.DISABLED)
@@ -167,13 +174,13 @@ class _TableFrame(tk.Frame):
         self.scrollbar_h.pack(side=tk.BOTTOM, anchor=tk.S, fill=tk.X)
         self.scrollbar_v.pack(side=tk.RIGHT, anchor=tk.E, fill=tk.Y)
         self.table.deploy()
-        super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.BOTH, expand=True)
+        self.pack(side=tk.TOP, anchor=tk.NW, fill=tk.BOTH, expand=True)
 
     def disable_controls(self) -> None:
-        pass
+        self.table.disable_controls()
 
     def enable_controls(self) -> None:
-        pass
+        self.table.enable_controls()
 
 class _OpenFileButton(tk.Button):
     def __init__(self, master:Any) -> None:
@@ -190,7 +197,7 @@ class _OpenFileButton(tk.Button):
             command=self.onclick)
 
     def deploy(self) -> None:
-        super().pack(side=tk.LEFT)
+        self.pack(side=tk.LEFT)
 
     def onclick(self) -> None:
         filetypes = [("英単語ファイル", "*")]
@@ -227,7 +234,7 @@ class _ProcessButton(tk.Button):
             command=self.onclick)
 
     def deploy(self) -> None:
-        super().pack(side=tk.LEFT)
+        self.pack(side=tk.LEFT)
 
     def onclick(self) -> None:
         Gui.get_instance().disable_controls()
@@ -256,7 +263,7 @@ class _ExportButton(tk.Button):
             command=self.onclick)
 
     def deploy(self) -> None:
-        super().pack(side=tk.LEFT)
+        self.pack(side=tk.LEFT)
 
     def onclick(self) -> None:
         directory_path = filedialog.askdirectory(
@@ -328,8 +335,14 @@ class _Table(ttk.Treeview):
 
     _SHOW_OPTION = "headings"
 
+    _SELECT_ITEM_EVENT = "<<TreeviewSelect>>"
+
     def __init__(self, master: Any) -> None:
-        super().__init__(master, columns=self._COLUMNS, show=self._SHOW_OPTION)
+        super().__init__(
+            master,
+            columns=self._COLUMNS,
+            show=self._SHOW_OPTION,
+            selectmode=tk.BROWSE)
         for column in self._COLUMNS:
             self.column(
                 column,
@@ -339,10 +352,11 @@ class _Table(ttk.Treeview):
                 column,
                 text=self._COLUMN_HEADINGS[column],
                 anchor=self._COLUMN_ANCHOR[column])
-
+        self.bind(self._SELECT_ITEM_EVENT, self.on_select_item)
+        self.enabled : bool = True
 
     def deploy(self) -> None:
-        super().pack(side=tk.TOP, anchor=tk.NW, fill=tk.Y, expand=True)
+        self.pack(side=tk.TOP, anchor=tk.NW, fill=tk.Y, expand=True)
 
     def update_english_words(
         self, english_words:list[english_word.EnglishWord]) -> None:
@@ -400,6 +414,25 @@ class _Table(ttk.Treeview):
         
     def get_image_string(self, image_id:Optional[int]) -> str:
         return "なし" if image_id is None else "あり"
+
+    def on_select_item(self, event) -> None:
+        if not self.enabled:
+            self.clear_selection()
+            return
+        Gui.get_instance().set_image_frame_visibility(True)
+
+    def clear_selection(self) -> None:
+        for iid in self.selection():
+            self.selection_remove(iid)
+        Gui.get_instance().set_image_frame_visibility(False)
+
+    def disable_controls(self) -> None:
+        self.clear_selection()
+        self.enabled = False
+
+    def enable_controls(self) -> None:
+        self.enabled = True
+
 
 class _ExportProgressDialog(tk.Toplevel):
     TITLE = "エクスポート中"
@@ -494,3 +527,71 @@ class _ExportProgressDialog(tk.Toplevel):
             self.set_progress_text(self.PROGRESS_TEXT_CSV)
         else:
             self.set_progress_text(self.PROGRESS_TEXT_DONE)
+
+class _ImageFrame(tk.Frame):
+    def __init__(self, master: Any) -> None:
+        super().__init__(master)
+        self.space = tk.Frame(self)
+        self.image_label = _ImageLable(self)
+        self.image_canvas = _ImageCanvas(self)
+        Gui.get_instance().image_frame = self
+
+    def deploy(self) -> None:
+        self.space.pack(pady=30)
+        self.image_label.deploy()
+        self.image_canvas.deploy()
+        self.pack(side=tk.TOP, anchor=tk.NW, fill=tk.BOTH, expand=True)
+        self.set_visibility(False)
+
+    def disable_controls(self) -> None:
+        self.image_label.disable_controls()
+        self.image_canvas.disable_controls()
+
+    def enable_controls(self) -> None:
+        self.image_label.enable_controls()
+        self.image_canvas.enable_controls()
+
+    def set_visibility(self, visible:bool) -> None:
+        if visible:
+            self.pack(side=tk.TOP, anchor=tk.NW, fill=tk.BOTH, expand=True)
+        else:
+            self.pack_forget()
+
+class _ImageLable(tk.Label):
+    INITIAL_TEXT = "画像"
+
+    def __init__(self, master: Any) -> None:
+        super().__init__(master)
+        self.setText(self.INITIAL_TEXT)
+
+    def deploy(self) -> None:
+        self.pack(side=tk.TOP, anchor=tk.N, fill=tk.X)
+
+    def setText(self, text:str) -> None:
+        self.config(text=text)
+
+    def disable_controls(self) -> None:
+        pass
+
+    def enable_controls(self) -> None:
+        pass
+
+class _ImageCanvas(tk.Canvas):
+    WIDTH = 200
+    HEIGHT = 200
+    def __init__(self, master: Any) -> None:
+        super().__init__(
+            master,
+            borderwidth=1,
+            relief=tk.SOLID,
+            width=self.WIDTH,
+            height=self.HEIGHT)
+
+    def deploy(self) -> None:
+        self.pack(side=tk.TOP, anchor=tk.N)
+
+    def disable_controls(self) -> None:
+        pass
+
+    def enable_controls(self) -> None:
+        pass
