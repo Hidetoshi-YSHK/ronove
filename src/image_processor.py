@@ -21,7 +21,7 @@ class ImageProcessor(singleton.Singleton):
         except Exception:
             return None
 
-    def bytes_to_photo_image(
+    def convert_bytes_to_photo_image(
         self, image_data:bytes) -> Optional[ImageTk.PhotoImage]:
         try:
             img = PillowImage.open(io.BytesIO(image_data))

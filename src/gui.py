@@ -1,5 +1,4 @@
 import re
-import time
 from typing import Any, Literal, Optional 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -15,6 +14,7 @@ import english_word
 import singleton
 
 class Gui(singleton.Singleton):
+    TITLE = "ronove"
     WINDOW_MIN_WIDTH = 1280
     WINDOW_MIN_HEIGHT = 720
     BUTTON_WIDTH = 48
@@ -26,8 +26,12 @@ class Gui(singleton.Singleton):
         self.table : Optional[_Table] = None
         self.export_progress_dialog : Optional[_ExportProgressDialog] = None
         self.image_frame : Optional[_ImageFrame] = None
+        self.image_canvas : Optional[_ImageCanvas] = None
 
         self.root = tkdnd.Tk()
+        self.root.title(self.TITLE)
+        self.root.iconbitmap(
+            default=resources.Resources.get_path(resources.Resources.ICON))
         self.root.geometry(f"{self.WINDOW_MIN_WIDTH}x{self.WINDOW_MIN_HEIGHT}")
         self.root.minsize(
             width=self.WINDOW_MIN_WIDTH, height=self.WINDOW_MIN_HEIGHT)
@@ -113,6 +117,14 @@ class Gui(singleton.Singleton):
             if word:
                 self.root.clipboard_clear()
                 self.root.clipboard_append(word)
+
+    def set_photo_image_to_canvas(self, photo_image:ImageTk.PhotoImage) -> None:
+        if self.image_canvas:
+            self.image_canvas.set_photo_image(photo_image)
+
+    def clear_image_canvas(self) -> None:
+        if self.image_canvas:
+            self.image_canvas.clear_photo_image()
 
 class _LeftFrame(tk.Frame):
     def __init__(self, master: Any) -> None:
@@ -436,7 +448,20 @@ class _Table(ttk.Treeview):
         if not self.enabled:
             self.clear_selection()
             return
-        Gui.get_instance().set_image_frame_visibility(True)
+        gui = Gui.get_instance()
+        gui.set_image_frame_visibility(True)
+
+        iid = self.get_selected_item_id()
+        if not iid:
+            gui.clear_image_canvas()
+            return
+        rnv = ronove.Ronove.get_instance()
+        photo_image = rnv.gain_photo_image_by_english_word_id(int(iid))
+        if not photo_image:
+            gui.clear_image_canvas()
+            return
+        gui.set_photo_image_to_canvas(photo_image)
+
 
     def clear_selection(self) -> None:
         for iid in self.selection():
@@ -610,17 +635,25 @@ class _ImageLable(tk.Label):
 class _ImageCanvas(tk.Canvas):
     WIDTH = 200
     HEIGHT = 200
+    _BORDER_WIDTH = 1
+    _CX = 101
+    _CY = 101
+    _HIGHLIGHT_THICKNESS = 0
     _DROP_EVENT = "<<Drop>>"
+    _ALL = "all"
 
     def __init__(self, master: Any) -> None:
         super().__init__(
             master,
-            borderwidth=1,
+            borderwidth=self._BORDER_WIDTH,
             relief=tk.SOLID,
             width=self.WIDTH,
-            height=self.HEIGHT)
+            height=self.HEIGHT,
+            highlightthickness=self._HIGHLIGHT_THICKNESS)
         self.drop_target_register(tkdnd.DND_FILES) # type: ignore
         self.dnd_bind(self._DROP_EVENT, self.on_drop_files) # type: ignore
+        self.photo_image = None
+        Gui.get_instance().image_canvas = self
 
     def deploy(self) -> None:
         self.pack(side=tk.TOP, anchor=tk.N)
@@ -644,9 +677,25 @@ class _ImageCanvas(tk.Canvas):
             if not file_path:
                 return
 
-            iid = Gui.get_instance().get_selected_item_id()
+            gui = Gui.get_instance()
+            iid = gui.get_selected_item_id()
             if not iid:
                 return
 
             rnv = ronove.Ronove.get_instance()
             rnv.set_image_to_english_word(file_path, int(iid))
+
+            photo_image = rnv.gain_photo_image_by_english_word_id(int(iid))
+            if not photo_image:
+                return
+            gui.set_photo_image_to_canvas(photo_image)
+
+    def set_photo_image(self, photo_image:ImageTk.PhotoImage) -> None:
+        self.photo_image = photo_image
+        self.delete(self._ALL)
+        self.create_image(
+            self._CX, self._CY, image=self.photo_image, anchor=tk.CENTER)
+
+    def clear_photo_image(self) -> None:
+        self.delete(self._ALL)
+        self.photo_image = None

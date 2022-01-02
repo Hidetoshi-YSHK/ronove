@@ -3,7 +3,8 @@ import os
 import os.path as path
 import time
 import csv
-from typing import Union
+from typing import Optional, Union
+from PIL import ImageTk
 
 import gui
 import database
@@ -186,17 +187,37 @@ class Ronove(singleton.Singleton):
         english_word_id:int) -> None:
         img_pro = image_processor.ImageProcessor.get_instance()
         image_data = img_pro.load_and_preprocess(image_file_path)
-        if image_data:
-            db = database.Database.get_instance()
-            word = db.select_one_english_word_by_id(english_word_id)
-            if word:
-                if word.image_id:
-                    db.delete_image_by_id(word.image_id)
-                img = image.Image(image_data, image.Image.EXTENSION_JPG)
-                img_id = db.add_image(img)
-                word.image_id = img_id # type: ignore
-                db.update_english_word(word)
-                self.on_one_english_word_change(word)
+        if not image_data:
+            return
+
+        db = database.Database.get_instance()
+        word = db.select_one_english_word_by_id(english_word_id)
+        if not word:
+            return
+
+        if word.image_id:
+            db.delete_image_by_id(word.image_id)
+        img = image.Image(image_data, image.Image.EXTENSION_JPG)
+        img_id = db.add_image(img)
+        word.image_id = img_id # type: ignore
+        db.update_english_word(word)
+        self.on_one_english_word_change(word)
+
+    def gain_photo_image_by_english_word_id(
+        self,
+        english_word_id: int) -> Optional[ImageTk.PhotoImage]:
+        db = database.Database.get_instance()
+        word = db.select_one_english_word_by_id(english_word_id)
+        if not word:
+            return None
+
+        img = db.select_image_of(word)
+        if not img:
+            return None
+
+        img_pro = image_processor.ImageProcessor.get_instance()
+        return img_pro.convert_bytes_to_photo_image(img.data)
+
 
     def on_app_start(self) -> None:
         self.on_english_words_change()
